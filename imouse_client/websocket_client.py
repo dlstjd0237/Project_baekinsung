@@ -77,7 +77,6 @@ class IMouseWebSocket:
 
 
     def call(self, fun: str, data: Optional[dict] = None, timeout: float = 10.0) -> dict:
-        """API 한 번 호출. 응답을 dict 그대로 반환."""
         if not self.is_connected:
             raise ConnectionError("WebSocket not connected. Call connect() first.")
 
@@ -89,7 +88,7 @@ class IMouseWebSocket:
         payload = {"fun": fun, "msgid": msgid, "data": data or {}}
         try:
             raw = json.dumps(payload, ensure_ascii=False)
-            logger.debug("REQ msgid=%d fun=%s data=%s", msgid, fun, payload["data"])
+            logger.info("REQ msgid=%d fun=%s data=%s", msgid, fun, payload["data"])
             self._ws.send(raw)
         except Exception as e:
             with self._lock:
@@ -121,7 +120,7 @@ class IMouseWebSocket:
 
     def _on_message(self, _ws, message: Any):
         if isinstance(message, (bytes, bytearray)):
-            logger.debug("RES binary len=%d (dropped)", len(message))
+            logger.info("RES binary len=%d (dropped)", len(message))
             return
 
         try:
@@ -131,7 +130,7 @@ class IMouseWebSocket:
             return
 
         msgid = data.get("msgid")
-        logger.debug(
+        logger.info(
             "RES msgid=%s fun=%s status=%s data=%s",
             msgid, data.get("fun"), data.get("status"), data.get("data"),
         )

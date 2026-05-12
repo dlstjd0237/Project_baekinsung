@@ -65,7 +65,7 @@ class Imouse:
     def restart_usb(self, deviceid: str) -> dict:
         return self._ws.call(DefineCommand.RESTART_USB, {"deviceid": deviceid})
 
-    def click(self, deviceid: str, x: float, y: float, button: int = 1,time_ms: int = 0) -> dict:
+    def click(self, deviceid: str, x: float, y: float, button: str = "left", time_ms: int = 0) -> dict:
         return self._ws.call(DefineCommand.CLICK,{"deviceid": deviceid, "button": button, "x": x, "y": y, "time": time_ms})
 
     def swipe(self,deviceid: str, direction: Optional[str] = None,  length: Optional[float] = None, 
@@ -92,12 +92,12 @@ class Imouse:
             DefineCommand.MOUSE_MOVE, {"deviceid": deviceid, "x": x, "y": y}
         )
 
-    def mouse_down(self, deviceid: str, button: int = 1) -> dict:
+    def mouse_down(self, deviceid: str, button: str = "left") -> dict:
         return self._ws.call(
             DefineCommand.MOUSE_DOWN, {"deviceid": deviceid, "button": button}
         )
 
-    def mouse_up(self, deviceid: str, button: int = 1) -> dict:
+    def mouse_up(self, deviceid: str, button: str = "left") -> dict:
         return self._ws.call(
             DefineCommand.MOUSE_UP, {"deviceid": deviceid, "button": button}
         )
