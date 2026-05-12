@@ -1,10 +1,13 @@
 import json
+import logging
 import threading
 import itertools
 from concurrent.futures import Future
 from typing import Any, Dict, Optional
 
 import websocket  # pip install websocket-client
+
+logger = logging.getLogger(__name__)
 
 
 class IMouseWebSocket:
@@ -18,8 +21,8 @@ class IMouseWebSocket:
     def __init__(
         self,
         host: str = "localhost",
-        port: int = 9912,
-        path: str = "",
+        port: int = 9911,
+        path: str = "/clinet",
         ping_interval: int = 10,
     ):
         self.url = f"ws://{host}:{port}{path}"
@@ -85,10 +88,13 @@ class IMouseWebSocket:
 
         payload = {"fun": fun, "msgid": msgid, "data": data or {}}
         try:
-            self._ws.send(json.dumps(payload, ensure_ascii=False))
+            raw = json.dumps(payload, ensure_ascii=False)
+            logger.debug("REQ msgid=%d fun=%s data=%s", msgid, fun, payload["data"])
+            self._ws.send(raw)
         except Exception as e:
             with self._lock:
                 self._pending.pop(msgid, None)
+            logger.exception("REQ msgid=%d fun=%s send failed", msgid, fun)
             raise ConnectionError(f"send failed: {e}") from e
 
         try:
@@ -111,19 +117,24 @@ class IMouseWebSocket:
             self._pending.clear()
 
     def _on_error(self, _ws, error):
-        # 필요하면 logger 로 교체
-        print(f"[IMouseWebSocket] error: {error}")
+        logger.error("WebSocket error: %s", error)
 
     def _on_message(self, _ws, message: Any):
         if isinstance(message, (bytes, bytearray)):
+            logger.debug("RES binary len=%d (dropped)", len(message))
             return
 
         try:
             data = json.loads(message)
         except json.JSONDecodeError:
+            logger.warning("RES non-JSON dropped: %r", message)
             return
 
         msgid = data.get("msgid")
+        logger.debug(
+            "RES msgid=%s fun=%s status=%s data=%s",
+            msgid, data.get("fun"), data.get("status"), data.get("data"),
+        )
         if isinstance(msgid, int) and msgid > 0:
             with self._lock:
                 fut = self._pending.pop(msgid, None)

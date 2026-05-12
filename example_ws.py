@@ -1,8 +1,12 @@
+import logging
+
 from imouse_client import Imouse
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 def main() -> None:
-    with Imouse(host="localhost", port=9912) as im:
+    with Imouse(host="127.0.0.1", port=9911) as im:
         print(im.get_device_list())
         deviceid = "FA:9E:10:3A:FE:E8"
         print(im.swipe(deviceid, direction="up", length=0.9))
